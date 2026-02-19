@@ -11,14 +11,10 @@ let chatHistory = [];
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
+    if (!userMessage) return res.status(400).json({ error: "Message required" });
 
-    if (!userMessage) {
-      return res.status(400).json({ error: "Message required" });
-    }
-
-    // ⭐ Serper search
+    // ===== SERPER SEARCH =====
     let webData = "";
-
     try {
       const serperRes = await fetch("https://google.serper.dev/search", {
         method: "POST",
@@ -31,10 +27,10 @@ app.post("/chat", async (req, res) => {
 
       const serperJson = await serperRes.json();
 
-      if (serperJson.organic && serperJson.organic.length > 0) {
+      if (serperJson.organic?.length) {
         const first = serperJson.organic[0];
         webData = `
-Latest internet result:
+REAL-TIME INTERNET DATA:
 Title: ${first.title}
 Snippet: ${first.snippet}
 Link: ${first.link}
@@ -44,25 +40,32 @@ Link: ${first.link}
       console.log("Serper error:", e.message);
     }
 
-    // ⭐ System identity lock
+    // ===== SYSTEM PROMPT (STRICT IDENTITY) =====
     const systemPrompt = {
       role: "system",
       content: `
-You are Bhumi AI created by Kunal Kumar.
+You are **Bhumi AI**, created ONLY by **Kunal Kumar**.
 
-Rules:
-- Never say OpenAI or ChatGPT created you.
-- Your creator is Kunal Kumar.
-- Respond naturally.
-- Do not use # * markdown symbols.
+ABSOLUTE RULES:
+- Never mention OpenAI, ChatGPT, or any company.
+- Your creator is always Kunal Kumar.
+- Remember full conversation context.
+- ALWAYS use the provided real-time internet data if available.
+- Give clear, natural answers without symbols like # * markdown.
 `
     };
 
-    chatHistory.push({
-      role: "user",
-      content: userMessage + "\n\n" + webData
-    });
+    // ===== FINAL USER MESSAGE =====
+    const finalMessage = webData
+      ? `${userMessage}
 
+Use the following REAL-TIME INTERNET DATA to answer accurately:
+${webData}`
+      : userMessage;
+
+    chatHistory.push({ role: "user", content: finalMessage });
+
+    // ===== OPENAI CALL =====
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -71,24 +74,28 @@ Rules:
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [systemPrompt, ...chatHistory],
-        temperature: 0.4
+        temperature: 0.4,
+        messages: [systemPrompt, ...chatHistory]
       })
     });
 
     const data = await response.json();
 
-    if (data.choices) {
-      const reply = data.choices[0].message.content;
+    if (data.choices?.length) {
+      let reply = data.choices[0].message.content;
+
+      // ===== SYMBOL CLEANUP =====
+      reply = reply.replace(/[#*`>]/g, "").trim();
 
       chatHistory.push({ role: "assistant", content: reply });
 
-      res.json(data);
-    } else {
-      res.json(data);
+      return res.json({ reply });
     }
 
+    res.json(data);
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });

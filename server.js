@@ -1,49 +1,33 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import OpenAI from "openai";
-
-dotenv.config();
+import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-/* ---------- TEST ROUTE ---------- */
-app.get("/", (req, res) => {
-  res.send("Bhumi backend running");
-});
-
-/* ---------- CHAT ROUTE ---------- */
 app.post("/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const userMessage = req.body.message;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: "You are Bhumi AI created by Kunal Kumar." },
-        { role: "user", content: message },
-      ],
-      max_tokens: 120,
-      temperature: 0.2,
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: userMessage }]
+      })
     });
 
-    res.json({
-      reply: response.choices[0].message.content,
-    });
+    const data = await response.json();
+    res.json(data);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ reply: "Server error." });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-/* ---------- START SERVER ---------- */
-app.listen(5000, "0.0.0.0", () => {
-  console.log("Bhumi backend running on port 5000");
-});
+app.listen(3000, () => console.log("Server running"));

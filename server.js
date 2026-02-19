@@ -3,25 +3,65 @@ import cors from "cors";
 import fetch from "node-fetch";
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+let chatHistory = [];
 
-// Health check route
-app.get("/", (req, res) => {
-  res.send("Bhumi AI Backend Running 🚀");
-});
-
-// Chat endpoint
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
 
     if (!userMessage) {
-      return res.status(400).json({ error: "Message is required" });
+      return res.status(400).json({ error: "Message required" });
     }
+
+    // ⭐ Serper search
+    let webData = "";
+
+    try {
+      const serperRes = await fetch("https://google.serper.dev/search", {
+        method: "POST",
+        headers: {
+          "X-API-KEY": process.env.SERPER_API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ q: userMessage })
+      });
+
+      const serperJson = await serperRes.json();
+
+      if (serperJson.organic && serperJson.organic.length > 0) {
+        const first = serperJson.organic[0];
+        webData = `
+Latest internet result:
+Title: ${first.title}
+Snippet: ${first.snippet}
+Link: ${first.link}
+`;
+      }
+    } catch (e) {
+      console.log("Serper error:", e.message);
+    }
+
+    // ⭐ System identity lock
+    const systemPrompt = {
+      role: "system",
+      content: `
+You are Bhumi AI created by Kunal Kumar.
+
+Rules:
+- Never say OpenAI or ChatGPT created you.
+- Your creator is Kunal Kumar.
+- Respond naturally.
+- Do not use # * markdown symbols.
+`
+    };
+
+    chatHistory.push({
+      role: "user",
+      content: userMessage + "\n\n" + webData
+    });
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -31,29 +71,30 @@ app.post("/chat", async (req, res) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: userMessage }]
+        messages: [systemPrompt, ...chatHistory],
+        temperature: 0.4
       })
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return res.status(500).json({
-        error: "OpenAI API error",
-        details: data
-      });
+    if (data.choices) {
+      const reply = data.choices[0].message.content;
+
+      chatHistory.push({ role: "assistant", content: reply });
+
+      res.json(data);
+    } else {
+      res.json(data);
     }
 
-    res.json({
-      reply: data.choices?.[0]?.message?.content || "No response"
-    });
-
   } catch (err) {
-    console.error("Server Error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.get("/", (req, res) => {
+  res.send("Bhumi AI Backend Running 🚀");
 });
+
+app.listen(process.env.PORT || 3000, () => console.log("Server running"));

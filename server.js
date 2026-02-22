@@ -119,3 +119,7 @@ app.get("/", (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server running");
 });
+
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});

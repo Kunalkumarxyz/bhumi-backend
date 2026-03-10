@@ -167,13 +167,20 @@ app.post("/image", async (req, res) => {
         body: JSON.stringify({
           model: "gpt-image-1",
           prompt: prompt,
-          size: "1024x1024",
+          size: "1024x1024"
         }),
       }
     );
 
     const data = await response.json();
-    res.json({ image: data.data[0].url });
+
+    // Convert base64 → usable image
+    const imageBase64 = data.data[0].b64_json;
+
+    const imageUrl = `data:image/png;base64,${imageBase64}`;
+
+    res.json({ image: imageUrl });
+
   } catch (err) {
     console.error("Image error:", err);
     res.status(500).json({ error: "Image generation failed" });

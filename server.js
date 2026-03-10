@@ -149,6 +149,7 @@ app.get("/", (req, res) => {
 
 // ================= Image Generation =================
 app.post("/image", async (req, res) => {
+
   try {
 
     const prompt = req.body.prompt;
@@ -166,9 +167,9 @@ app.post("/image", async (req, res) => {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "dall-e-2",
+          model: "gpt-image-1",
           prompt: prompt,
-          size: "512x512"
+          size: "1024x1024"
         })
       }
     );
@@ -184,7 +185,9 @@ app.post("/image", async (req, res) => {
       });
     }
 
-    const imageUrl = data.data[0].url;
+    const base64 = data.data[0].b64_json;
+
+    const imageUrl = `data:image/png;base64,${base64}`;
 
     res.json({ image: imageUrl });
 
@@ -197,6 +200,7 @@ app.post("/image", async (req, res) => {
     });
 
   }
+
 });
 
 // ================= PDF =================

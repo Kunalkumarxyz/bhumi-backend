@@ -167,9 +167,9 @@ app.post("/image", async (req, res) => {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-image-1",
+          model: "dall-e-2",
           prompt: prompt,
-          size: "1024x1024"
+          size: "512x512"
         })
       }
     );
@@ -185,9 +185,8 @@ app.post("/image", async (req, res) => {
       });
     }
 
-    const base64 = data.data[0].b64_json;
-
-    const imageUrl = `data:image/png;base64,${base64}`;
+    // DALL·E returns URL
+    const imageUrl = data.data[0].url;
 
     res.json({ image: imageUrl });
 

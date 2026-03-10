@@ -150,6 +150,7 @@ app.get("/", (req, res) => {
 // ================= Image Generation =================
 app.post("/image", async (req, res) => {
   try {
+
     const prompt = req.body.prompt;
 
     if (!prompt) {
@@ -162,20 +163,19 @@ app.post("/image", async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-image-1",
+          model: "dall-e-2",
           prompt: prompt,
-          size: "1024x1024"
+          size: "512x512"
         })
       }
     );
 
     const data = await response.json();
 
-    // DEBUG (Render logs me dikhega)
-    console.log("OPENAI IMAGE RESPONSE:", data);
+    console.log("IMAGE RESPONSE:", data);
 
     if (!data.data || !data.data[0]) {
       return res.status(500).json({
@@ -184,15 +184,18 @@ app.post("/image", async (req, res) => {
       });
     }
 
-    const base64 = data.data[0].b64_json;
-
-    const imageUrl = `data:image/png;base64,${base64}`;
+    const imageUrl = data.data[0].url;
 
     res.json({ image: imageUrl });
 
   } catch (err) {
+
     console.error("Image error:", err);
-    res.status(500).json({ error: "Image generation failed" });
+
+    res.status(500).json({
+      error: "Image generation failed"
+    });
+
   }
 });
 

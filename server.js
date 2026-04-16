@@ -5,11 +5,7 @@ import cors from "cors";
 import fetch from "node-fetch";
 import PDFDocument from "pdfkit";
 import { Document, Packer, Paragraph, HeadingLevel } from "docx";
-import admin from "firebase-admin";
 
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_KEY))
-});
 
 const app = express();
 
@@ -18,33 +14,6 @@ app.use(helmet());
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-
-const verifyFirebaseToken = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      return res.status(401).json({ error: "No token" });
-    }
-
-    // ✅ FIXED
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    const decoded = await admin.auth().verifyIdToken(token);
-
-    req.user = decoded;
-
-    next();
-
-  } catch (err) {
-  console.log("🔥 TOKEN VERIFY ERROR:", err);
-  return res.status(401).json({ error: err.message });
-}
-};
 
 // ================= LOGGING =================
 app.use((req, res, next) => {
@@ -101,7 +70,7 @@ You are Bhumi AI, a smart and helpful assistant created by Kunal Kumar.
 };
 
 // ================= CHAT =================
-app.post("/chat", verifyFirebaseToken, async (req, res) => {
+app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
 

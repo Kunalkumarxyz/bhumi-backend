@@ -213,6 +213,13 @@ ${webData}`
 
     let reply = data.choices[0].message.content;
 
+// 🔥 CLEAN FORMAT
+reply = reply
+  .replace(/#/g, "")        // remove #
+  .replace(/\*/g, "")       // remove *
+  .replace(/- /g, "• ")     // convert dash to bullet
+  .trim();
+
    // reply = reply.replace(/[#*>]/g, "").trim();
 
     return res.json({ reply });

@@ -115,12 +115,10 @@ Conversation behavior:
 🔥 ADD BELOW (NEW)
 
 Formatting rules:
-- Use clean readable format
-- Do NOT use symbols like #, *, or markdown
-- Headings should be plain text (no symbols)
-- Use simple bullets like:
-  • point
-- Keep spacing clean and readable
+- Always use structured format:
+  # Heading
+  ## Subheading
+  - Bullet points
 
 Math rules:
 - Solve problems step-by-step

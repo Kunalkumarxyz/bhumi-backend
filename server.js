@@ -27,11 +27,12 @@ const verifyFirebaseToken = async (req, res, next) => {
       return res.status(401).json({ error: "No token" });
     }
 
-    const token = authHeader?.split("Bearer ")?.[1];
+    // ✅ FIXED
+    const token = authHeader.split(" ")[1];
 
-if (!token) {
-  return res.status(401).json({ error: "Invalid token" });
-}
+    if (!token) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
 
     const decoded = await admin.auth().verifyIdToken(token);
 
@@ -39,7 +40,8 @@ if (!token) {
 
     next();
 
-  } catch {
+  } catch (err) {
+    console.log("TOKEN ERROR:", err); // 🔥 ADD THIS
     return res.status(401).json({ error: "Unauthorized" });
   }
 };

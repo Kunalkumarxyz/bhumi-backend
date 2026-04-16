@@ -115,10 +115,12 @@ Conversation behavior:
 🔥 ADD BELOW (NEW)
 
 Formatting rules:
-- Always use structured format:
-  # Heading
-  ## Subheading
-  - Bullet points
+- Use clean readable format
+- Do NOT use symbols like #, *, or markdown
+- Headings should be plain text (no symbols)
+- Use simple bullets like:
+  • point
+- Keep spacing clean and readable
 
 Math rules:
 - Solve problems step-by-step
@@ -210,6 +212,13 @@ ${webData}`
     }
 
     let reply = data.choices[0].message.content;
+
+// 🔥 CLEAN FORMAT
+reply = reply
+  .replace(/#/g, "")        // remove #
+  .replace(/\*/g, "")       // remove *
+  .replace(/- /g, "• ")     // convert dash to bullet
+  .trim();
    // reply = reply.replace(/[#*>]/g, "").trim();
 
     return res.json({ reply });

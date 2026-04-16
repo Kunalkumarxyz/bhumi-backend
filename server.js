@@ -41,9 +41,9 @@ const verifyFirebaseToken = async (req, res, next) => {
     next();
 
   } catch (err) {
-    console.log("TOKEN ERROR:", err); // 🔥 ADD THIS
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  console.log("🔥 TOKEN VERIFY ERROR:", err);
+  return res.status(401).json({ error: err.message });
+}
 };
 
 // ================= LOGGING =================

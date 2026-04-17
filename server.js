@@ -11,15 +11,30 @@ const app = express();
 
 // 🔥 SECURITY
 app.use(helmet());
-app.use(cors({ origin: "*" }));
 app.use(express.json());
+app.use(cors({
+  origin: false
+}));
+
+// auth middleware (simple API key check)
+app.use((req, res, next) => {
+  const key = req.headers["x-api-key"];
+
+  if (key !== process.env.APP_SECRET) {
+    return res.status(403).send("Unauthorized");
+  }
+
+  next();
+});
 
 
 // ================= LOGGING =================
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url} - IP: ${req.ip}`);
-  next();
-});
+if (process.env.NODE_ENV === "development") {
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
+}
 
 // 🔥 RATE LIMIT (only chat)
 const limiter = rateLimit({
@@ -29,6 +44,8 @@ const limiter = rateLimit({
 });
 
 app.use("/chat", limiter);
+app.use("/pdf", limiter);
+app.use("/docx", limiter);
 
 
 // ================= 🔥 SYSTEM PROMPT =================

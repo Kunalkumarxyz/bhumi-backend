@@ -252,16 +252,12 @@ app.post("/chat-image", async (req, res) => {
       ];
 
     } else if (fileText) {
-    // ✅ Base64 se PDF text extract karo
-    const pdfBuffer = Buffer.from(fileText, "base64");
-    const pdfData = await pdfParse(pdfBuffer);
-    const extractedText = pdfData.text.slice(0, 3000);
-
+    // ✅ Debug — pdf-parse skip, seedha test
     messages = [
         { role: "system", content: systemPrompt.content },
         {
             role: "user",
-            content: `Document content:\n${extractedText}\n\nQuestion: ${message}`
+            content: `User ne ek PDF upload kiya hai. Question: ${message}`
         }
     ];
 } else {
@@ -291,7 +287,7 @@ app.post("/chat-image", async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ reply: "Server busy. Try again." });
-  }
+}
 });
 
 

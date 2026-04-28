@@ -11,7 +11,7 @@ const app = express();
 
 // 🔥 SECURITY
 app.use(helmet());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cors({
   origin: false
 }));
@@ -46,6 +46,7 @@ const limiter = rateLimit({
 app.use("/chat", limiter);
 app.use("/pdf", limiter);
 app.use("/docx", limiter);
+app.use("/chat-image", limiter);
 
 
 // ================= 🔥 SYSTEM PROMPT =================
@@ -212,6 +213,77 @@ app.post("/docx", async (req, res) => {
 
   } catch {
     res.status(500).json({ error: "DOCX failed" });
+  }
+});
+
+
+// ================= CHAT IMAGE =================
+app.post("/chat-image", async (req, res) => {
+  try {
+    const { message, image, fileText } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "Message required" });
+    }
+
+    let messages;
+
+    if (image) {
+      messages = [
+        { role: "system", content: systemPrompt.content },
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${image}`
+              }
+            },
+            {
+              type: "text",
+              text: message
+            }
+          ]
+        }
+      ];
+
+    } else if (fileText) {
+      messages = [
+        { role: "system", content: systemPrompt.content },
+        {
+          role: "user",
+          content: `Document content:\n${fileText}\n\nQuestion: ${message}`
+        }
+      ];
+
+    } else {
+      return res.status(400).json({ error: "Image or file required" });
+    }
+
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          temperature: 0.2,
+          max_tokens: 500,
+          messages: messages
+        }),
+      }
+    );
+
+    const data = await response.json();
+    const reply = data?.choices?.[0]?.message?.content || "Please try again.";
+    res.json({ reply });
+
+  } catch (err) {
+    res.status(500).json({ reply: "Server busy. Try again." });
   }
 });
 

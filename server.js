@@ -298,6 +298,7 @@ app.post("/chat-image", async (req, res) => {
     res.json({ reply });
 
   } catch (err) {
+    console.error("CHAT-IMAGE ERROR:", err.message);
     res.status(500).json({ reply: "Server busy. Try again." });
 }
 });

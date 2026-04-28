@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import cors from "cors";
 import fetch from "node-fetch";
 import PDFDocument from "pdfkit";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { Document, Packer, Paragraph, HeadingLevel } from "docx";
 
 
@@ -249,15 +250,19 @@ app.post("/chat-image", async (req, res) => {
       ];
 
     } else if (fileText) {
-      messages = [
+    // ✅ Base64 se PDF text extract karo
+    const pdfBuffer = Buffer.from(fileText, "base64");
+    const pdfData = await pdfParse(pdfBuffer);
+    const extractedText = pdfData.text.slice(0, 3000);
+
+    messages = [
         { role: "system", content: systemPrompt.content },
         {
-          role: "user",
-          content: `Document content:\n${fileText}\n\nQuestion: ${message}`
+            role: "user",
+            content: `Document content:\n${extractedText}\n\nQuestion: ${message}`
         }
-      ];
-
-    } else {
+    ];
+} else {
       return res.status(400).json({ error: "Image or file required" });
     }
 

@@ -252,8 +252,12 @@ app.post("/chat-image", async (req, res) => {
 
     } else if (fileText) {
     const pdfBuffer = Buffer.from(fileText, "base64");
-    const uint8Array = new Uint8Array(pdfBuffer);
-    const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+    const uint8Array = new Uint8Array(
+    pdfBuffer.buffer,
+    pdfBuffer.byteOffset,
+    pdfBuffer.byteLength
+); // ✅ proper conversion
+const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
     const pdfDoc = await loadingTask.promise;
     
     let extractedText = "";

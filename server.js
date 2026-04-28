@@ -4,9 +4,7 @@ import rateLimit from "express-rate-limit";
 import cors from "cors";
 import fetch from "node-fetch";
 import PDFDocument from "pdfkit";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { Document, Packer, Paragraph, HeadingLevel } from "docx";
 
 
@@ -14,6 +12,7 @@ const app = express();
 
 // 🔥 SECURITY
 app.use(helmet());
+app.set("trust proxy", 1); 
 app.use(express.json({ limit: "10mb" }));
 app.use(cors({
   origin: false
@@ -252,12 +251,25 @@ app.post("/chat-image", async (req, res) => {
       ];
 
     } else if (fileText) {
-    // ✅ Debug — pdf-parse skip, seedha test
+    const pdfBuffer = Buffer.from(fileText, "base64");
+    
+    const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+    const pdfDoc = await loadingTask.promise;
+    
+    let extractedText = "";
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(" ");
+        extractedText += pageText + "\n";
+        if (extractedText.length > 3000) break;
+    }
+
     messages = [
         { role: "system", content: systemPrompt.content },
         {
             role: "user",
-            content: `User ne ek PDF upload kiya hai. Question: ${message}`
+            content: `Document content:\n${extractedText.slice(0, 3000)}\n\nQuestion: ${message}`
         }
     ];
 } else {

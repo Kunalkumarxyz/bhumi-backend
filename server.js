@@ -4,7 +4,7 @@ import rateLimit from "express-rate-limit";
 import cors from "cors";
 import fetch from "node-fetch";
 import PDFDocument from "pdfkit";
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import pdfParse from "pdf-parse";
 import { Document, Packer, Paragraph, HeadingLevel } from "docx";
 
 

@@ -98,7 +98,7 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Message required" });
     }
 
-    if (userMessage.length > 1000) {
+    if (userMessage.length > 3000) {
       return res.status(400).json({ error: "Message too long" });
     }
 
@@ -113,7 +113,7 @@ app.post("/chat", async (req, res) => {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           temperature: 0.2,
-          max_tokens: 500,
+          max_tokens: 1500,
         messages: [
          { role: "system", content: systemPrompt.content },
          ...(req.body.history || []), // ✅ history
@@ -142,7 +142,7 @@ app.post("/pdf", (req, res) => {
   try {
     const text = req.body.text || "";
 
-    if (text.length > 5000) {
+    if (text.length > 10000) {
       return res.status(400).json({ error: "Too large" });
     }
 
@@ -179,7 +179,7 @@ app.post("/docx", async (req, res) => {
   try {
     const text = req.body.text || "";
 
-    if (text.length > 5000) {
+    if (text.length > 10000) {
       return res.status(400).json({ error: "Too large" });
     }
 
@@ -295,7 +295,7 @@ app.post("/chat-image", async (req, res) => {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           temperature: 0.2,
-          max_tokens: 500,
+          max_tokens: 1500,
           messages: messages
         }),
       }

@@ -114,10 +114,11 @@ app.post("/chat", async (req, res) => {
           model: "gpt-4o-mini",
           temperature: 0.2,
           max_tokens: 500,
-          messages: [
-            { role: "system", content: systemPrompt.content },
-            { role: "user", content: userMessage },
-          ],
+        messages: [
+         { role: "system", content: systemPrompt.content },
+         ...(req.body.history || []), // ✅ history
+         { role: "user", content: userMessage },
+         ],
         }),
       }
     );
@@ -257,7 +258,10 @@ app.post("/chat-image", async (req, res) => {
     pdfBuffer.byteOffset,
     pdfBuffer.byteLength
 ); // ✅ proper conversion
-const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+    const loadingTask = pdfjsLib.getDocument({ 
+    data: uint8Array,
+    useSystemFonts: true  // ✅ font warning fix
+});
     const pdfDoc = await loadingTask.promise;
     
     let extractedText = "";

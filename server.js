@@ -86,8 +86,58 @@ You are Bhumi AI, a smart and helpful assistant created by Kunal Kumar.
 
  Identity
 - You are Bhumi AI
+
+ Web Search
+- If user asks about current events, news, live scores, weather, prices — search the web first then answer
+- Always mention when answer is based on web search
 `
 }; 
+
+// ================= SERPER SEARCH =================
+async function searchWeb(query) {
+  try {
+    const response = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: {
+        "X-API-KEY": process.env.SERPER_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ q: query, num: 5 })
+    });
+
+    const data = await response.json();
+    const results = data.organic?.slice(0, 5).map(r =>
+      `Title: ${r.title}\nSnippet: ${r.snippet}\nLink: ${r.link}`
+    ).join("\n\n") || "";
+
+    const answerBox = data.answerBox?.answer || data.answerBox?.snippet || "";
+    return answerBox ? `Answer: ${answerBox}\n\n${results}` : results;
+
+  } catch (err) {
+    console.error("Search error:", err.message);
+    return "";
+  }
+}
+
+async function searchImages(query) {
+  try {
+    const response = await fetch("https://google.serper.dev/images", {
+      method: "POST",
+      headers: {
+        "X-API-KEY": process.env.SERPER_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ q: query, num: 3 })
+    });
+
+    const data = await response.json();
+    return data.images?.slice(0, 3).map(img => img.imageUrl) || [];
+
+  } catch (err) {
+    console.error("Image search error:", err.message);
+    return [];
+  }
+}
 
 // ================= CHAT =================
 app.post("/chat", async (req, res) => {
@@ -102,6 +152,30 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Message too long" });
     }
 
+    // ✅ Search keywords check
+    const searchKeywords = [
+      "news", "today", "latest", "current", "live",
+      "score", "price", "weather", "stock", "2024", "2025", "2026",
+      "abhi", "aaj", "kal", "kya hua", "result", "who is", "kaun hai",
+      "kya hai", "what is", "when did", "kab"
+    ];
+
+    const needsSearch = searchKeywords.some(k =>
+      userMessage.toLowerCase().includes(k)
+    );
+
+    let searchContext = "";
+    let images = [];
+
+    if (needsSearch) {
+      const [searchResult, imageResult] = await Promise.all([
+        searchWeb(userMessage),
+        searchImages(userMessage)
+      ]);
+      searchContext = searchResult;
+      images = imageResult;
+    }
+
     const response = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -114,28 +188,29 @@ app.post("/chat", async (req, res) => {
           model: "gpt-4o-mini",
           temperature: 0.2,
           max_tokens: 1500,
-        messages: [
-         { role: "system", content: systemPrompt.content },
-         ...(req.body.history || []), // ✅ history
-         { role: "user", content: userMessage },
-         ],
+          messages: [
+            { role: "system", content: systemPrompt.content },
+            ...(req.body.history || []),
+            {
+              role: "user",
+              content: searchContext
+                ? `Web search results:\n${searchContext}\n\nUser question: ${userMessage}`
+                : userMessage
+            },
+          ],
         }),
       }
     );
 
     const data = await response.json();
+    const reply = data?.choices?.[0]?.message?.content || "Please try again.";
 
-    const reply =
-      data?.choices?.[0]?.message?.content ||
-      "Please try again.";
-
-    res.json({ reply });
+    res.json({ reply, images }); // ✅ images bhi bhejo
 
   } catch {
     res.status(500).json({ reply: "Server busy. Try again." });
   }
 });
-
 
 // ================= PDF =================
 app.post("/pdf", (req, res) => {

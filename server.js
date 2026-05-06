@@ -496,10 +496,21 @@ app.post("/chat", async (req, res) => {
 
     // ✅ Search keywords check
   const searchKeywords = [
+  // Current/Live info
   "news", "today", "latest", "current", "live score",
   "price", "weather", "stock market", "2025", "2026",
   "abhi", "aaj ka", "kal ka", "result", "election",
-  "breaking", "update", "kya hua"
+  "breaking", "update", "kya hua",
+  // Person queries
+  "who is", "who was", "kaun hai", "kaun tha",
+  "about", "biography", "life of", "history of",
+  "ke baare mein", "kiske baare", "tell me about",
+  // Place/thing queries  
+  "what is", "kya hai", "explain", "define",
+  "where is", "kahan hai", "capital of",
+  // Event queries
+  "when did", "kab hua", "founded", "invented",
+  "discovered", "winner of", "award"
   ];
 
     const needsSearch = searchKeywords.some(k =>
@@ -510,13 +521,26 @@ app.post("/chat", async (req, res) => {
     let images = [];
 
     if (needsSearch) {
-      const [searchResult, imageResult] = await Promise.all([
-        searchWeb(userMessage),
-        searchImages(userMessage)
-      ]);
-      searchContext = searchResult;
-      images = imageResult;
-    }
+  const [searchResult, imageResult] = await Promise.all([
+    searchWeb(userMessage),
+    searchImages(userMessage)
+  ]);
+  searchContext = searchResult;
+  images = imageResult;
+} else {
+  // Topic/concept ke liye bhi image dhundo
+  const imageOnlyKeywords = [
+    "what is", "kya hai", "explain", "who is", "kaun hai",
+    "about", "show me", "diagram", "photo", "image",
+    "how does", "kaise", "ke baare mein"
+  ];
+  const needsImage = imageOnlyKeywords.some(k =>
+    userMessage.toLowerCase().includes(k)
+  );
+  if (needsImage) {
+    images = await searchImages(userMessage);
+  }
+}
 
     const response = await fetch(
       "https://api.openai.com/v1/chat/completions",

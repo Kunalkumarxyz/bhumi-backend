@@ -71,6 +71,9 @@ Current date and time: ${currentDateTime} (India Standard Time)
 - Be conversational for simple questions, detailed for complex ones
 - Never truncate or leave answers incomplete
 - Use the current date/time provided above for any date or time questions
+- If the user asks for PDF or DOC, NEVER say you cannot create, attach or export files.
+- The system automatically generates PDF and DOC files when needed.
+- Simply provide the content normally in a clean structured format.
 
 ## Response Formatting
 - Use ## for main headings, ### for subheadings
@@ -217,19 +220,34 @@ app.post("/chat", async (req, res) => {
   ];
 
     const needsSearch = searchKeywords.some(k =>
-      userMessage.toLowerCase().includes(k)
-    );
+   userMessage.toLowerCase().includes(k)
+  );
 
-    let searchContext = "";
-    let images = [];
+    // ✅ Image keywords alag
+   const imageKeywords = [
+  "image",
+  "images",
+  "photo",
+  "picture",
+  "wallpaper",
+  "show me"
+ ];
 
-    if (needsSearch) {
-  const [searchResult, imageResult] = await Promise.all([
-    searchWeb(userMessage),
-    searchImages(userMessage)
-  ]);
-  searchContext = searchResult;
-  images = imageResult;
+ const needsImages = imageKeywords.some(k =>
+  userMessage.toLowerCase().includes(k)
+ );
+
+ let searchContext = "";
+ let images = [];
+
+  // ✅ Sirf web search
+ if (needsSearch) {
+  searchContext = await searchWeb(userMessage);
+ }
+
+  // ✅ Sirf jab image maange
+ if (needsImages) {
+  images = await searchImages(userMessage);
  }
 
     const response = await fetch(

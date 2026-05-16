@@ -83,6 +83,15 @@ Current date and time: ${currentDateTime} (India Standard Time)
 - Add blank lines between sections for readability
 - For simple questions: answer directly without unnecessary structure
 - For complex questions: use full structured format
+- When the user requests PDF or DOC content:
+  - Return ONLY the document content
+  - Do NOT write introductions like:
+    "Here is the PDF content"
+    "You can use this"
+    "If you want..."
+  - Do NOT add conversational endings
+  - Start directly with the document heading/title
+  - End cleanly and professionally without conversational phrases
 
 ## Math & Calculations (STRICT)
 - NEVER use LaTeX: no \\frac, \\sqrt, \\times, \\cdot, $$, $, \\[, \\], \\(, \\)
@@ -226,14 +235,27 @@ app.post("/chat", async (req, res) => {
    let searchContext = "";
    let images = [];
 
-   if (needsSearch) {
-   const [searchResult, imageResult] = await Promise.all([
-    searchWeb(userMessage),
-    searchImages(userMessage)
-   ]);
-   searchContext = searchResult;
-   images = imageResult;
- }
+    const lower = userMessage.toLowerCase();
+
+const needsImages =
+  lower.startsWith("who is") ||
+  lower.includes("person") ||
+  lower.includes("celebrity") ||
+  lower.includes("actor") ||
+  lower.includes("actress") ||
+  lower.includes("founder") ||
+  lower.includes("image") ||
+  lower.includes("photo") ||
+  lower.includes("picture") ||
+  lower.includes("show");
+
+if (needsSearch) {
+  searchContext = await searchWeb(userMessage);
+}
+
+if (needsImages) {
+  images = await searchImages(userMessage);
+}
 
     const response = await fetch(
       "https://api.openai.com/v1/chat/completions",
@@ -276,8 +298,15 @@ app.post("/chat", async (req, res) => {
 app.post("/pdf", (req, res) => {
   try {
     const text = req.body.text || "";
+    const cleanText = text
+  .replace(/Here is.*?:/gi, "")
+  .replace(/You can use.*?:/gi, "")
+  .replace(/If you want.*$/gis, "")
+  .replace(/^PDF Content$/gim, "")
+  .replace(/^DOC Content$/gim, "")
+  .trim();
 
-    if (text.length > 10000) {
+    if (cleanText.length > 10000) {
       return res.status(400).json({ error: "Too large" });
     }
 
@@ -288,11 +317,13 @@ app.post("/pdf", (req, res) => {
 
     doc.pipe(res);
 
-    text.split("\n").forEach(line => {
+    cleanText.split("\n").forEach(line => {
       if (line.startsWith("# ")) {
         doc.fontSize(18).text(line.replace("# ", ""), { underline: true });
       } else if (line.startsWith("## ")) {
         doc.fontSize(16).text(line.replace("## ", ""));
+      } else if (line.startsWith("### ")) {
+        doc.fontSize(14).text(line.replace("### ", ""));
       } else if (line.startsWith("- ")) {
         doc.fontSize(12).text("• " + line.replace("- ", ""));
       } else {
@@ -313,12 +344,19 @@ app.post("/pdf", (req, res) => {
 app.post("/docx", async (req, res) => {
   try {
     const text = req.body.text || "";
+    const cleanText = text
+  .replace(/Here is.*?:/gi, "")
+  .replace(/You can use.*?:/gi, "")
+  .replace(/If you want.*$/gis, "")
+  .replace(/^PDF Content$/gim, "")
+  .replace(/^DOC Content$/gim, "")
+  .trim();
 
-    if (text.length > 10000) {
+    if (cleanText.length > 10000) {
       return res.status(400).json({ error: "Too large" });
     }
 
-    const lines = text.split("\n");
+    const lines = cleanText.split("\n");
 
     const children = lines.map(line => {
       if (line.startsWith("# ")) {
@@ -330,6 +368,11 @@ app.post("/docx", async (req, res) => {
         return new Paragraph({
           text: line.replace("## ", ""),
           heading: HeadingLevel.HEADING_2
+        });
+      } else if (line.startsWith("### ")) {
+        return new Paragraph({
+          text: line.replace("### ", ""),
+          heading: HeadingLevel.HEADING_3
         });
       } else if (line.startsWith("- ")) {
         return new Paragraph({

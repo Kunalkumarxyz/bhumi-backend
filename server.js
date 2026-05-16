@@ -220,34 +220,19 @@ app.post("/chat", async (req, res) => {
   ];
 
     const needsSearch = searchKeywords.some(k =>
-   userMessage.toLowerCase().includes(k)
-  );
+    userMessage.toLowerCase().includes(k)
+   );
 
-    // ✅ Image keywords alag
-   const imageKeywords = [
-  "image",
-  "images",
-  "photo",
-  "picture",
-  "wallpaper",
-  "show me"
- ];
+   let searchContext = "";
+   let images = [];
 
- const needsImages = imageKeywords.some(k =>
-  userMessage.toLowerCase().includes(k)
- );
-
- let searchContext = "";
- let images = [];
-
-  // ✅ Sirf web search
- if (needsSearch) {
-  searchContext = await searchWeb(userMessage);
- }
-
-  // ✅ Sirf jab image maange
- if (needsImages) {
-  images = await searchImages(userMessage);
+   if (needsSearch) {
+   const [searchResult, imageResult] = await Promise.all([
+    searchWeb(userMessage),
+    searchImages(userMessage)
+   ]);
+   searchContext = searchResult;
+   images = imageResult;
  }
 
     const response = await fetch(

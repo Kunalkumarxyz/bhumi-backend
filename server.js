@@ -211,8 +211,10 @@ app.post("/chat", async (req, res) => {
   "news", "today", "latest", "current", "live",
   "score", "price", "weather", "stock", "2024", "2025", "2026",
   "abhi", "aaj", "kal", "kya hua", "result", "who is", "kaun hai",
-  "kya hai", "what is", "when did", "kab"
-];
+  "kya hai", "what is", "when did", "kab", "election", "match", "ipl", "bitcoin",
+  "gold price", "temperature", "earthquake",
+  "breaking", "update", "new"
+  ];
 
     const needsSearch = searchKeywords.some(k =>
       userMessage.toLowerCase().includes(k)
@@ -239,9 +241,9 @@ app.post("/chat", async (req, res) => {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: 0.2,
-          max_tokens: 2000,
+          model: "gpt-5.4-mini",
+          temperature: 0.3,
+          max_completion_tokens: 4000,
           messages: [
             { role: "system", content: systemPrompt.content },
             ...(req.body.history || []).slice(-10),
@@ -423,9 +425,9 @@ app.post("/chat-image", async (req, res) => {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: 0.2,
-          max_tokens: 2000,
+          model: "gpt-5.4-mini",
+          temperature: 0.3,
+          max_completion_tokens: 4000,
           messages: messages
         }),
       }

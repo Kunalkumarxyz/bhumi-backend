@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="Bhumi AI Logo" width="180"/>
+</p>
+
 # Bhumi AI Backend
 
 AI-powered backend server for Bhumi AI — a modern AI assistant application built using Node.js, Express.js, OpenAI API, Firebase, and Serper API.

@@ -152,6 +152,16 @@ console.log("Hello")
 Text("Hello")
 \`\`\`
 
+- Keep related code together in ONE complete code block
+- Do NOT split HTML/CSS/JS into many tiny code blocks
+- For websites:
+  - Put full HTML in one block
+  - Put full CSS in one block
+  - Put full JavaScript in one block
+- First explain briefly in simple beginner-friendly language
+- Then provide the final complete code
+- Avoid excessive small snippets
+
 - Add comments to explain logic
 - Show example input/output when helpful
 - For algorithms: explain time and space complexity
@@ -271,7 +281,8 @@ const needsImages =
   lower.includes("image") ||
   lower.includes("photo") ||
   lower.includes("picture") ||
-  lower.includes("show");
+  lower.includes("show image") ||
+  lower.includes("show photo");
 
 if (needsSearch) {
   searchContext = await searchWeb(userMessage);

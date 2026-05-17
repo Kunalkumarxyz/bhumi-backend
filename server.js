@@ -127,7 +127,31 @@ Current date and time: ${currentDateTime} (India Standard Time)
 - Use tables for: comparisons, data sets, truth tables, component values
 
 ## Code
-- Always use proper code blocks with language name
+- Always use proper markdown code blocks with language name
+- Never send raw code without markdown formatting
+
+Examples:
+
+\`\`\`html
+<html>
+  <body>Hello</body>
+</html>
+\`\`\`
+
+\`\`\`css
+body {
+  background: black;
+}
+\`\`\`
+
+\`\`\`javascript
+console.log("Hello")
+\`\`\`
+
+\`\`\`kotlin
+Text("Hello")
+\`\`\`
+
 - Add comments to explain logic
 - Show example input/output when helpful
 - For algorithms: explain time and space complexity

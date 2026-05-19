@@ -393,11 +393,31 @@ async function searchImages(query) {
     });
 
     const data = await response.json();
-    return data.images?.slice(0, 3).map(img => img.imageUrl) || [];
+    // ✅ VALID IMAGE FILTER
+   const validImages = (data.images || []).filter(img => {
+
+   const url = img.thumbnailUrl || img.imageUrl || "";
+
+   return (
+    url.startsWith("http") &&
+    (
+      url.includes(".jpg") ||
+      url.includes(".jpeg") ||
+      url.includes(".png") ||
+      url.includes(".webp")
+      )
+     );
+   });
+
+    return validImages
+   .slice(0, 3)
+   .map(img =>
+    img.thumbnailUrl || img.imageUrl
+   );
 
   } catch (err) {
-    console.error("Image search error:", err.message);
-    return [];
+  console.error("Image search error:", err.message);
+  return [];
   }
 }
 
@@ -420,8 +440,15 @@ app.post("/chat", async (req, res) => {
   "score", "price", "weather", "stock", "2024", "2025", "2026",
   "abhi", "aaj", "kal", "kya hua", "result", "who is", "kaun hai",
   "kya hai", "what is", "when did", "kab", "election", "match", "ipl", "bitcoin",
-  "gold price", "temperature", "earthquake",
-  "breaking", "update"
+  "gold price", "temperature", "earthquake", "breaking", "update", "cm", 
+  "chief minister", "prime minister", "pm", "president", "governor", "minister",
+  "cabinet", "mla", "mp", "government", "politics", "political", 
+  "future", "forecast", "predict", "prediction", "trend", "trending",
+  "coronavirus", "covid", "vaccine", "omicron", "delta", "pandemic",
+  "world", "country", "city", "population", "gdp", "economy", "sports", "football", 
+  "cricket", "tennis", "olympics", "world cup", "championship", "nobel",
+  "award", "oscars", "movies", "films", "celebrities", "actors", "actresses",
+  "founders", "entrepreneurs", "business leaders"
   ];
 
     const needsSearch = searchKeywords.some(k =>

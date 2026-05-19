@@ -74,6 +74,14 @@ Current date and time: ${currentDateTime} (India Standard Time)
 - If the user asks for PDF or DOC, NEVER say you cannot create, attach or export files.
 - The system automatically generates PDF and DOC files when needed.
 - Simply provide the content normally in a clean structured format.
+- If images are already provided in the response,
+  do NOT say you cannot display images or photos.
+
+- When image results exist, acknowledge them naturally.
+
+- Do not mention limitations about displaying public images.
+- For image requests:
+  keep the text response short and relevant.
 
 ## Response Formatting
 - Use ## for main headings, ### for subheadings
@@ -470,17 +478,20 @@ app.post("/chat", async (req, res) => {
   // elections / news
   "election",
   "result",
-  "news"
+  "news",
+
+  // people / companies
+  "founder",
+  "ceo",
+  "owner",
+  "creator",
+  "developer",
+  "entrepreneur",
+  "company",
+  "brand"
   ];
 
-    const lowerMessage = userMessage.toLowerCase();
-
-    const needsSearch = currentAffairsPatterns.some(pattern =>
-      lowerMessage.includes(pattern)
-    ) && lowerMessage.length < 200;
-
-   let searchContext = "";
-   let images = [];
+   const lowerMessage = userMessage.toLowerCase();
 
    const lower = userMessage.toLowerCase();
 
@@ -499,6 +510,21 @@ app.post("/chat", async (req, res) => {
 
    lower.includes("wallpaper") ||
    /\bpic\b/.test(lower);
+
+   const needsSearch = (
+
+      currentAffairsPatterns.some(pattern =>
+        lowerMessage.includes(pattern)
+      )
+
+     ||
+
+     needsImages
+
+    ) && lowerMessage.length < 200;
+
+   let searchContext = "";
+   let images = [];
 
    if (needsSearch) {
    const currentYear = new Date().getFullYear();
@@ -731,7 +757,7 @@ app.post("/chat-image", async (req, res) => {
             content: `Document content:\n${extractedText.slice(0, 5000)}\n\nQuestion: ${message}`
         }
     ];
-} else {
+    } else {
       return res.status(400).json({ error: "Image or file required" });
     }
 
@@ -779,4 +805,12 @@ app.get("/health", (req, res) => res.send("OK"));
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server running");
 });
+
+
+
+
+
+
+
+
 
